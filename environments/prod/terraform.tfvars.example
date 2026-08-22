@@ -1,0 +1,6 @@
+# Copie este arquivo para terraform.tfvars e preencha com seus valores
+# NUNCA commite o terraform.tfvars com valores reais no repositório
+
+project_id   = "seu-projeto-gcp-id"
+project_name = "meu-projeto"
+region       = "us-central1"

@@ -1,0 +1,93 @@
+name: Terraform CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+env:
+  TF_VERSION: "1.5.7"
+  WORKING_DIR: environments/prod
+
+jobs:
+  # ── Roda em todo PR ────────────────────────────────
+  terraform-plan:
+    name: "Terraform Plan"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Autenticar no GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Terraform Init
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform Format Check
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform plan -var="project_id=${{ secrets.GCP_PROJECT_ID }}" -out=tfplan
+        
+      - name: Comentar Plan no PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const output = `#### 🔍 Terraform Plan concluído
+            **Branch:** \`${{ github.head_ref }}\`
+            **Workflow:** \`${{ github.workflow }}\`
+            
+            ✅ Plan gerado com sucesso! Revise as mudanças antes de fazer merge.`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
+  # ── Roda só no merge para main ─────────────────────
+  terraform-apply:
+    name: "Terraform Apply"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production  # exige aprovação manual
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Autenticar no GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Terraform Init
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform apply -var="project_id=${{ secrets.GCP_PROJECT_ID }}" -auto-approve

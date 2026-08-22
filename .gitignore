@@ -1,0 +1,15 @@
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfplan
+terraform.tfvars        # nunca commitar valores reais!
+
+# Credenciais GCP
+*.json
+credentials/
+
+# Sistema
+.DS_Store
+*.log
