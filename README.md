@@ -96,4 +96,4 @@ gcloud container clusters get-credentials <cluster-name> \
 
 **Gabriel Chermont**  
 Cloud & Platform Engineer  
-[LinkedIn](https://linkedin.com/in/seu-perfil) · [GitHub](https://github.com/seu-usuario)
+[LinkedIn](https://linkedin.com/in/gabriel-chermont/) · [GitHub](https://github.com/Chermms)
